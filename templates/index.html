@@ -1,33 +1,92 @@
 <html>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <head>
     <script src="https://catastrophicthinking.com/lib/jquery-3.3.1.js"></script>
   </head>
   <body>
-    <div id="result" class="bubble" style="display:none">Type any text here and the bubble will grow to fit the text no matter how many lines.  Isn't that nifty?
+    <div id="spinny-container" style="display: none">
+      <div id="spinny">
+      </div>
+    </div>
+    <div id="result" class="bubble" style="display:none">
+      <div id="result-text"></div>
+      <button id="go-again">go again</button>
     </div>
     <div id="form" class="bubble">
       <div id="explanatory-text">
-        Hi everybody! I'm ZoeBee2.0, an AI trained on Zoe's videos. Want me to say something? Fill out this form!
+        Hi everybody! I'm ZoeBee2.0.
       </div>
       <form id="form">
         <label>How should I start?</label>
         <label class="helper">
-          I'll finish whatever statement you start here. Feel free to leave blank.
+          What I say will start with what you write here. Feel free to leave blank.
         </label>
-        <textarea type="textarea" id="prefix"></textarea>
+        <textarea type="textarea" id="prefix">Hi everybody!</textarea>
         <label>Temperature</label>
         <label class="helper">
           How creative do you want me to be? .2 is very low; anything higher than 1.2 can get pretty silly. Max of 2.
         </label>
-        <input type="number" step="0.1" id="" max="2">
+        <input type="number" step="0.1" id="temperature" min="0" max="2" value=".9">
         <label>How many words should I say?</label>
-        <label class="helper">Max of 1000.</label>
-        <input type="number" step="1" id="length" max="1000">
-        <button id="go">Go</button>
+        <label class="helper">Max of 2000.</label>
+        <input type="number" step="1" id="length" min="0" max="1000" value="100">
+        <button id="go">talk</button>
       </form>
     </div>
     <script>
+
+      function displayBubble(name){
+        $(".bubble").css("display", "none");
+        $("#" + name).css("display", "block");
+      }
+      function spin(){
+        $("#spinny-container").css("display", "block");
+      }
+      function stopSpinning(){
+        $("#spinny-container").css("display", "none");
+      }
+
+      function goAgain(e){
+        displayBubble('form');
+      }
+
+      function go(e){
+        e.preventDefault(); // avoid html forms default behavior
+        let prefix = $("#prefix").val();
+        let temperature = parseFloat($("#temperature").val());
+        let length = parseInt($("#length").val());
+        if (length < 0 || length > 1000){
+          window.alert('Temperature must be between 0 and 2');
+        }
+        if (temperature > 2 || temperature < 0){
+          window.alert('Temperature must be between 0 and 2');
+        }
+        spin()
+        $.ajax({
+          url: '/talk',
+          type: "POST",
+          data: JSON.stringify({
+            'prefix': prefix,
+            'temperature': temperature,
+            'length': length
+          }),
+          contentType: 'application/json; charset=utf-8',
+          dataType: 'json',
+          timeout: 30000,
+          success: function(data){
+            $("#result-text").text(data);
+            displayBubble("result");
+            stopSpinning();
+          },
+          error: function(data){
+            debugger;
+          }
+        });
+      }
       $(document).ready(function(){
+        $("#go").on("click", go);
+        $("#go-again").on("click", goAgain);
       });
     </script>
     <style>
@@ -37,17 +96,24 @@
           background-position: left;
           background-color: #353757;
       }
+      @media only screen and (max-width: 600px) {
+          body{
+              background-size: auto 42%;
+          }
+      }
 
-      #go{
+      button {
+          font-variant: small-caps;
           width: 20%;
           left: 40%;
           text-align: center;
           position: relative;
           margin-top: 20px;
-          font-size: 25px;
+          font-size: 14px;
       }
+
       .helper{
-          font-size: 16px;
+          font-size: 10px;
           text-align: left;
       }
       #form {
@@ -61,22 +127,53 @@
           width: 100%;
       }
       #form textarea{
-          font-size: 28px;
+
           width: 100%;
-          height:75px;
+          height: 40px;
           float: left;
       }
       #form input{
           float: left;
-          font-size: 18px;
+          font-size: 14px;
           width: 100%;
-          margin-top: 20px;
-
       }
+      #spinny-container{
+          position: absolute;
+          background-color: gray;
+          opacity: 50%;
+          width: 100%;
+          height: 100%;
+          z-index: 10000;
+          overflow: hidden;
+      }
+      #spinny{
+          overflow: hidden;
+          width: 100px;
+          height: 100px;
+          background: linear-gradient(180deg, white, black);
+          animation-name: spin;
+          animation-duration: 2000ms;
+          animation-iteration-count: infinite;
+          animation-timing-function: linear;
+          border-radius: 50%;
+          display: block;
+          /* margin: auto; */
+          margin: 250px auto;
+      }
+
+      @keyframes spin {
+          from {
+              transform:rotate(0deg);
+          }
+          to {
+              transform:rotate(360deg);
+          }
+      }
+
       .bubble {
           position: relative;
           font-family: sans-serif;
-          font-size: 30px;
+          font-size: 14px;
           width: 50%;
           max-width: 50%;
           background: #fff;
@@ -99,7 +196,12 @@
           bottom: -24px;
           float: right;
       }
-
+      /* @media only screen and (max-width: 600px) { */
+      /*     .bubble{ */
+      /*         max-height: 50%; */
+      /*         overflow-y: scroll; */
+      /*     } */
+      /* } */
     </style>
 
   </body>
