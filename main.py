@@ -1,4 +1,5 @@
 import gpt_2_simple as gpt2
+import tensorflow as tf
 import sys
 from flask import Flask, render_template, send_from_directory, jsonify, request
 
@@ -48,6 +49,7 @@ def train_model():
     return sess, gpt2
 
 def load_and_run_model(prefix, temperature=.8, length=500):
+    tf.reset_default_graph()
     sess = gpt2.start_tf_sess()
     gpt2.load_gpt2(sess)
     return gpt2.generate(

@@ -80,7 +80,9 @@
             stopSpinning();
           },
           error: function(data){
-            debugger;
+            $("#result-text").text("Oops! Something went wrong. I'm probably too busy chatting with other people. Please check back in a few minutes.");
+            displayBubble("result");
+            stopSpinning();
           }
         });
       }
