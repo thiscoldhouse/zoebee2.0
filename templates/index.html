@@ -30,14 +30,19 @@
         <label class="helper">
           How creative do you want me to be? .2 is very low; anything higher than 1.2 can get pretty silly. Max of 2.
         </label>
-        <input type="number" step="0.1" id="temperature" min="0" max="2" value=".9">
+        <input type="number" step="0.1" id="temperature" min="0" max="5" value=".9">
         <label>How many words should I say?</label>
         <label class="helper">Max of 1000.</label>
+        {% if is_zoe %}
+        <input type="number" step="1" id="length" min="0" max="5000" value="100">
+        {% else %}
         <input type="number" step="1" id="length" min="0" max="1000" value="100">
+        {% endif %}
         <button id="go">talk</button>
       </form>
     </div>
     <script>
+      let is_zoe = {{ is_zoe }};
 
       function displayBubble(name){
         $(".bubble").css("display", "none");
@@ -59,13 +64,15 @@
         let prefix = $("#prefix").val();
         let temperature = parseFloat($("#temperature").val());
         let length = parseInt($("#length").val());
-        if (length < 0 || length > 1000){
+        if (!is_zoe){
+          if (length < 0 || length > 1000){
             window.alert('Max length of 1000');
 	    return
-        }
-        if (temperature > 2 || temperature < 0){
+          }
+          if (temperature > 2 || temperature < 0){
             window.alert('Temperature must be between 0 and 2');
 	    return
+          }
         }
         spin()
         $.ajax({
@@ -74,7 +81,8 @@
           data: JSON.stringify({
             'prefix': prefix,
             'temperature': temperature,
-            'length': length
+            'length': length,
+            'is_zoe': is_zoe,
           }),
           contentType: 'application/json; charset=utf-8',
           dataType: 'json',

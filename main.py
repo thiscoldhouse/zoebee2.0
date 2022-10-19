@@ -9,13 +9,20 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    is_zoe = request.args.get('is_zoe')
+    if is_zoe:
+        is_zoe = 'true'
+    else:
+        is_zoe = 'false'
+    return render_template('index.html', is_zoe=is_zoe)
 
 @app.route('/talk', methods=['POST'])
 def talk():
     data = request.get_json(force=True)
-    if data['length'] > 2000:
-        return jsonify('Length must be less than 1000')
+    is_zoe = data['is_zoe']
+    if not is_zoe:
+        if data['length'] > 1000:
+            return jsonify('Length must be less than 1000')
 
     text = load_and_run_model(
             data['prefix'],
@@ -27,8 +34,6 @@ def talk():
     print(text)
     print('=========')
     return jsonify(text)
-
-
 
 @app.route('/static')
 def staticfiles(path):
