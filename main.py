@@ -39,6 +39,8 @@ def staticfiles(path):
 transcripts_fname = 'transcripts.txt'
 model_name = "124M"
 i = 50
+sess = gpt2.start_tf_sess()
+gpt2.load_gpt2(sess)
 
 def train_model():
     sess = gpt2.start_tf_sess()
@@ -49,9 +51,6 @@ def train_model():
     return sess, gpt2
 
 def load_and_run_model(prefix, temperature=.8, length=500):
-    tf.reset_default_graph()
-    sess = gpt2.start_tf_sess()
-    gpt2.load_gpt2(sess)
     return gpt2.generate(
         sess,
         length=length,

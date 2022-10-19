@@ -29,7 +29,7 @@
         </label>
         <input type="number" step="0.1" id="temperature" min="0" max="2" value=".9">
         <label>How many words should I say?</label>
-        <label class="helper">Max of 2000.</label>
+        <label class="helper">Max of 1000.</label>
         <input type="number" step="1" id="length" min="0" max="1000" value="100">
         <button id="go">talk</button>
       </form>
@@ -57,10 +57,12 @@
         let temperature = parseFloat($("#temperature").val());
         let length = parseInt($("#length").val());
         if (length < 0 || length > 1000){
-          window.alert('Temperature must be between 0 and 2');
+            window.alert('Max length of 1000');
+	    return
         }
         if (temperature > 2 || temperature < 0){
-          window.alert('Temperature must be between 0 and 2');
+            window.alert('Temperature must be between 0 and 2');
+	    return
         }
         spin()
         $.ajax({
@@ -73,7 +75,7 @@
           }),
           contentType: 'application/json; charset=utf-8',
           dataType: 'json',
-          timeout: 30000,
+          timeout: 180000,
           success: function(data){
             $("#result-text").text(data);
             displayBubble("result");
