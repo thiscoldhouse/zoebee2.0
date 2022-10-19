@@ -88,7 +88,7 @@
           dataType: 'json',
           timeout: 180000,
           success: function(data){
-            $("#result-text").text(data);
+            $("#result-text").html(data);
             displayBubble("result");
             stopSpinning();
           },
