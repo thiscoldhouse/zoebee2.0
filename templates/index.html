@@ -9,6 +9,22 @@
       <div id="spinny">
       </div>
     </div>
+    <div id="waiting" class="bubble" style="display:none">
+      <h3>
+        This should take <span id="wait-time">a little while</span>. Don't refresh or you'll lose your spot!
+      </h3>
+      <div>
+        While you wait, here are some other quotes people have generated:
+      </div>
+      <br>
+      <div id="waiting-quote">
+      </div>
+      <div class="vote-buttons">
+        <button class="vote-button" id="upvote">that's a good one. give me another.</button>
+        <button class="vote-button" id="downvote">not so funny. let's try again.</button>
+      </div>
+    </div>
+
     <div id="result" class="bubble" style="display:none">
       <div id="result-text"></div>
       <button id="go-again">go again</button>
@@ -43,7 +59,8 @@
     </div>
     <script>
       let is_zoe = {{ is_zoe }};
-
+      var CURRENTQUOTEID = null;
+      var WAITINGQUOTEID = null;
       function displayBubble(name){
         $(".bubble").css("display", "none");
         $("#" + name).css("display", "block");
@@ -57,6 +74,46 @@
 
       function goAgain(e){
         displayBubble('form');
+      }
+
+      function displayWaitingQuote(waitingQuote){
+        $("#waiting-quote").text(waitingQuote.text)
+        WAITINGQUOTEID = waitingQuote.id;
+      }
+
+      function getQuoteUpdate(){
+        console.log('Getting quote update');
+        $.get('/waiting/' + CURRENTQUOTEID).then(function(data){
+          if (data.finished){
+            if (data.success){
+              $("#result-text").html(data.body);
+            } else {
+              $("#result-text").text(
+                "Oops! Something went wrong. I'm probably too busy chatting with other people. Please check back in a few minutes."
+              );
+            }
+            displayBubble("result");
+          }
+          else {
+            // data not finished
+            var unit = ' minutes'
+            if (data.wait_time == 1){
+              unit = ' minute'
+            }
+            $("#wait-time").text('around ' + data.wait_time + unit);
+            setTimeout(getQuoteUpdate, 5000);
+          }
+        });
+      }
+
+      function vote(e){
+        e.preventDefault();
+        e.currentTarget.id
+        $.get(
+          '/vote/' + WAITINGQUOTEID + '?vote=' + e.currentTarget.id
+        ).then(function(data){
+          displayWaitingQuote(data);
+        })
       }
 
       function go(e){
@@ -74,7 +131,6 @@
 	    return
           }
         }
-        spin()
         $.ajax({
           url: '/talk',
           type: "POST",
@@ -88,9 +144,10 @@
           dataType: 'json',
           timeout: 180000,
           success: function(data){
-            $("#result-text").html(data);
-            displayBubble("result");
-            stopSpinning();
+            CURRENTQUOTEID = data['id'];
+            getQuoteUpdate();
+            displayWaitingQuote(data['waiting_quote']);
+            displayBubble('waiting');
           },
           error: function(data){
             $("#result-text").text("Oops! Something went wrong. I'm probably too busy chatting with other people. Please check back in a few minutes.");
@@ -102,6 +159,7 @@
       $(document).ready(function(){
         $("#go").on("click", go);
         $("#go-again").on("click", goAgain);
+        $('.vote-button').on("click", vote);
       });
     </script>
     <style>
@@ -127,6 +185,15 @@
           font-size: 16px;
       }
 
+      .vote-buttons{
+          width: 50%;
+      }
+
+      .vote-buttons button{
+          height: 50px;
+          display: block;
+          width: 100%;
+      }
       .helper{
           font-size: 10px;
           text-align: left;
